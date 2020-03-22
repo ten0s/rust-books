@@ -2,7 +2,14 @@ fn add_one(x: i32) -> i32 {
     x + 1
 }
 
-fn do_twice(f: fn(i32) -> i32, arg: i32) -> i32 {
+fn do_twice_fn_ptr(f: fn(i32) -> i32, arg: i32) -> i32 {
+    f(arg) + f(arg)
+}
+
+fn do_twice_fn_trait<F>(f: F, arg: i32) -> i32
+where
+    F: Fn(i32) -> i32,
+{
     f(arg) + f(arg)
 }
 
@@ -11,11 +18,28 @@ fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
 }
 
 fn main() {
-    let ans1 = do_twice(add_one, 5);
+    // https://doc.rust-lang.org/nightly/std/primitive.fn.html
+
+    // safe function pointer
+    let ans1 = do_twice_fn_ptr(add_one, 5);
+    println!("ans1 = {}", ans1);
+    let ans1 = do_twice_fn_trait(add_one, 5);
     println!("ans1 = {}", ans1);
 
-    let ans2 = do_twice(|x| x + 1, 5);
+    // closure that doesn't capture its environment
+    let ans2 = do_twice_fn_ptr(|x| x + 1, 5);
     println!("ans2 = {}", ans2);
+    let ans2 = do_twice_fn_ptr(|x| x + 1, 5);
+    println!("ans2 = {}", ans2);
+
+    let one = 1;
+    /*
+    // close that captures its environment
+    let ans3 = do_twice_fn_ptr(|x| x + one, 5);
+                               ^^^^^^^^^^^ expected fn pointer, found closure
+    */
+    let ans3 = do_twice_fn_trait(|x| x + one, 5);
+    println!("ans3 = {}", ans3);
 
     let numbers = vec![1, 2, 3];
     let strings: Vec<String> = numbers.iter().map(|i| i.to_string()).collect();
