@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::mpsc; // multiple producers single consumer
 use std::thread;
 use std::time::Duration;
 
