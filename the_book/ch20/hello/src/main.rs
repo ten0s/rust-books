@@ -1,7 +1,11 @@
+extern crate ctrlc;
 use std::fs;
+//use std::io;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
@@ -9,14 +13,42 @@ use hello::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    /*
+    listener
+        .set_nonblocking(true)
+        .expect("Cannot set non-blocking");
+    */
+
     let pool = ThreadPool::new(4);
 
-    for stream in listener.incoming().take(2) {
-        let stream = stream.unwrap();
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
 
-        pool.execute(|| {
-            handle_connection(stream);
-        });
+    /*
+    ctrlc::set_handler(move || {
+        r.store(false, Ordering::SeqCst);
+    })
+    .expect("Error setting Ctrl-C handler");
+    */
+
+    for stream in listener.incoming() {
+        /*
+        if !running.load(Ordering::SeqCst) {
+            println!("Got Ctrl-C. Exiting...");
+            break;
+        }
+        */
+
+        match stream {
+            Ok(tcp_stream) => {
+                pool.execute(|| {
+                    handle_connection(tcp_stream);
+                });
+            }
+            Err(e) => {
+                panic!("IO error: {}", e);
+            }
+        }
     }
 }
 
