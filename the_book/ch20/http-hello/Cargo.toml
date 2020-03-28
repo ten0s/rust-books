@@ -1,5 +1,5 @@
 [package]
-name = "hello"
+name = "http-hello"
 version = "0.1.0"
 authors = ["Dmitry Klionsky <dm.klionsky@gmail.com>"]
 edition = "2018"
